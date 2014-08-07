@@ -1,0 +1,212 @@
+# TEF: Tool to Extract sequence Fragments
+
+ #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+ # Author: Ellen Blaine
+ 
+ # File: TEF: Tool to Extract sequence Fragments
+ 
+ # Version 1.0
+ 
+ # Written in collaboration with Amanda E. Fisher (Rancho Santa Ana Botanic Garden, 
+ 
+ # Claremont, CA) to support analysis of next-generation sequencing data from the 
+ 
+ # grass subfamily Chloridoideae.
+
+
+# This program takes input files of sequence names (.txt) and sequences (fasta). It searches through 
+
+
+# the description lines of the fasta file for matches to the sequence names, and saves all
+
+
+#  sequences matching each sequence name to a separate .fasta file that can be used to construct an alignment.
+
+
+# INPUT: .txt file with all names on separate lines, with no slashes or special
+
+
+# characters. '-' and '_' are acceptable.
+
+
+# OUTPUT: .fasta files containing names and sequences of all exons containing
+
+
+# the names given in the input file.
+
+
+# SAMPLE command line input: python TEF.py SequenceNames.txt SequenceFile.fasta
+ 
+ # Please report bugs to eblaine@stanford.edu
+
+#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+from sys import argv
+
+
+script, exon_names, sequence_fasta = argv
+
+
+
+
+
+names_file = open(exon_names, "r")
+
+
+
+
+
+def main(names_file):
+
+
+    readfiles(names_file)
+
+
+
+
+
+def readfiles(names_file):
+
+
+    names_file = open(exon_names, "r")
+
+
+    name = names_file.readline()
+
+
+    while name:
+
+
+        seq_file = open(sequence_fasta, "r")
+
+
+        name_match = seq_file.readline()
+
+
+        file_contents = ""
+
+
+        while name_match:
+
+
+            if '_' in name:
+
+
+                name_parts = name.split('_')
+
+
+                if name_parts[0] in name_match and name_parts[1] in name_match:
+
+
+                    file_contents = buildseq(seq_file,name_match,file_contents)
+
+
+            else:
+
+
+                if name.rstrip() in name_match:
+
+
+                    file_contents = buildseq(seq_file,name_match,file_contents)
+
+
+            name_match = seq_file.readline()
+
+
+        file_name = name.rstrip() + ".fasta"
+
+
+        file = open(file_name, "w")
+
+
+        file.write(file_contents)
+
+
+        file.close()
+
+
+        name = names_file.readline()
+
+
+        seq_file.close()
+
+
+    names_file.close()
+
+
+
+
+
+
+
+
+def buildseq(seq_file,name_match,file_contents):
+
+
+    seq = ""
+
+
+    while 1:
+
+
+        next_line = seq_file.readline()
+
+
+        if ">" not in next_line:
+
+
+            seq += next_line
+
+
+        if ">" in next_line:
+
+
+            break
+
+
+    file_contents += name_match + seq
+
+
+    return file_contents
+
+
+
+
+
+main(names_file)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
