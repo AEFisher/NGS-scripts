@@ -1,0 +1,270 @@
+"""
+
+
+AlignHelper
+
+
+
+
+
+Author: Ellen Blaine
+
+
+Version: 08/27/2014
+
+
+
+
+
+INPUT: Folder containing FASTA files, list of species in .txt file
+
+
+OUTPUT: Folder titled "AlignHelper_Output" containing FASTA files. Each file will contain all of the species listed in the .txt file. Species missing in the original file will contain a string of "?"s as long as the longest sequence in the file. 
+
+
+
+
+
+Sample input: eblainer9$ python alignhelper_update.py TEF_Output SpeciesNames.txt
+
+
+ 
+
+
+"""
+
+
+
+
+
+import os
+
+
+from sys import argv
+
+
+
+
+
+script, input_folder, species_list = argv
+
+
+
+
+
+path = input_folder + '/'
+
+
+listing = os.listdir(path)
+
+
+folder_name = "AlignHelper_Output"
+
+
+number = 1
+
+
+while True:
+
+
+	try:
+
+
+		output = os.mkdir(folder_name)
+
+
+		break
+
+
+	except OSError:
+
+
+		folder_name = "AlignHelper_Output" + '-' + str(number)
+
+
+		number += 1	
+
+
+	
+
+
+def create_dict(infile):
+
+
+	file_path = path + infile
+
+
+	file = open(file_path, 'r')
+
+
+	dict = {}
+
+
+	seq = ""
+
+
+	name = ""
+
+
+	for line in file:
+
+
+		if line.startswith('>'):
+
+
+			dict[name] = seq
+
+
+			name = line
+
+
+			seq = ""
+
+
+		else:
+
+
+			seq += line
+
+
+	for line in file:
+
+
+		seq += line
+
+
+	dict[name] = seq
+
+
+	return dict
+
+
+	
+
+
+def find_longest(dict):
+
+
+	longest = 0
+
+
+	length = 0
+
+
+	for value in dict.values():
+
+
+		length = len(value)
+
+
+		if length > longest:
+
+
+			longest = length
+
+
+	return longest
+
+
+	
+
+
+def write_file(dict, longest, species_list, infile, folder_name):
+
+
+	header = ""
+
+
+	count = 0
+
+
+	old_count = 0
+
+
+	file = open(species_list, 'r')
+
+
+	path = folder_name + "/" + infile
+
+
+	outfile = open(path, 'w')
+
+
+	for line in file:
+
+
+		for key in dict.keys():
+
+
+			if line.rstrip() in key:
+
+
+				outfile.write(key)
+
+
+				outfile.write(dict.get(key))
+
+
+				count += 1
+
+
+		if old_count == count and count != 0:
+
+
+			header = ">" + line.rstrip() + "_" + infile[:infile.find('.')] + "\n"
+
+
+			dummy_seq = '?' * longest + "\n"
+
+
+			outfile.write(header)
+
+
+			outfile.write(dummy_seq)
+
+
+		old_count = count
+
+
+	add_bait_seq(dict, infile, outfile)
+
+
+	outfile.close()
+
+
+	
+
+
+def add_bait_seq(dict, infile, outfile):
+
+
+	if ".fasta" in infile:		#program ignores ".DS_Store" files
+
+
+		bait = '>' + infile[:infile.find('.')] + '\n'
+
+
+		seq = dict.get(bait)
+
+
+		outfile.write(bait)
+
+
+		outfile.write(seq)
+
+
+
+
+
+for infile in listing:
+
+
+	dict = create_dict(infile)
+
+
+	longest = find_longest(dict)
+
+
+	write_file(dict, longest, species_list, infile, folder_name)
+
+
